@@ -14,7 +14,7 @@ int rpm;
 int x=0;
 
 ///defination for pid controller 
-double kp =1;
+double kp =0;
 double ki =0;
 double kd =0;
 
@@ -23,7 +23,7 @@ double lastErr;
 double errSum;
 unsigned long lastTime =0 ; //last time when computed; initialize to zero
 
-double referenceRpm =200;
+double referenceRpm =240;
 double uDesired;
 
 
@@ -55,7 +55,35 @@ void loop() {
 //    analogWrite(E2, 255); // Run in full speed 
  
   rpm_measure();
-  pidController();
+// How long since we last calculated
+unsigned long now = millis();
+double timeChange = double(now - lastTime);
+
+
+//Compute all the working error variables
+double error = referenceRpm - rpm;
+errSum += (error*timeChange);
+double dErr = (error-lastErr)/timeChange;
+
+//Compute PID output means uDesired
+uDesired = kp * error + ki * errSum + kd* dErr+120;
+//Serial.print("\t");
+
+// remember some variables for next time
+lastErr = error;
+lastTime = now;
+
+
+Serial.print(rpm);
+Serial.print("\t");
+Serial.print(error);
+Serial.print("\t");
+//Serial.print(rpm);
+//Serial.print("\t");
+//Serial.print(rpm);
+//Serial.print("\t");
+Serial.println(uDesired);
+  
   analogWrite(E1,uDesired); 
 
 
@@ -78,28 +106,4 @@ rpm = x * 600 / 32;
 //Serial.println(rpm);
 }
 
-void pidController(){
-  // How long since we last calculated
-unsigned long now = millis();
-double timeChange = double(now - lastTime);
 
-
-//Compute all the working error variables
-double error = referenceRpm - rpm;
-errSum += (error*timeChange);
-double dErr = (error-lastErr)/timeChange;
-
-//Compute PID output means uDesired
-uDesired = kp * error + ki * errSum + kd* dErr;
-//Serial.print("\t");
-
-// remember some variables for next time
-lastErr = error;
-lastTime = now;
-
-
-Serial.print(rpm);
-Serial.print("\t");
-Serial.println(uDesired);
-  
-  }
