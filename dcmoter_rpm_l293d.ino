@@ -14,7 +14,7 @@ int rpm;
 int x=0;
 
 ///defination for pid controller 
-double kp =0;
+double kp =(float)30/(float)20000;
 double ki =0;
 double kd =0;
 
@@ -22,8 +22,9 @@ double error;
 double lastErr;
 double errSum;
 unsigned long lastTime =0 ; //last time when computed; initialize to zero
+//double referenceRpm =240;
 
-double referenceRpm =240;
+double referenceRpm;
 double uDesired;
 
 
@@ -41,6 +42,15 @@ void setup() {
     //XZpinMode(I4, OUTPUT);
     pinMode(encoderpin,INPUT);
     Serial.begin(115200);
+
+digitalWrite(I1, HIGH);
+    digitalWrite(I2, LOW);
+      analogWrite(E1,120); 
+      //rpm_measure();
+      //Serial.println(rpm);
+delay(10000);
+
+
 }
  
 void loop() {
@@ -49,24 +59,38 @@ void loop() {
     digitalWrite(I2, LOW);
   //  digitalWrite(I3, HIGH);
    // digitalWrite(I4, LOW);
+
+   
    
  //manipulating enable pin 
     ///////////////////////////analogWrite(E1, 255); // pwm//// it is in void pid controller
 //    analogWrite(E2, 255); // Run in full speed 
  
   rpm_measure();
+double spdtime= millis();
+
+if(spdtime<40000){
+ referenceRpm =spdtime;
+}
+else
+{
+referenceRpm =40000;
+}
+  
 // How long since we last calculated
 unsigned long now = millis();
 double timeChange = double(now - lastTime);
 
 
 //Compute all the working error variables
-double error = referenceRpm - rpm;
+//double error = referenceRpm - rpm;
+ error = referenceRpm;
+
 errSum += (error*timeChange);
 double dErr = (error-lastErr)/timeChange;
 
 //Compute PID output means uDesired
-uDesired = kp * error + ki * errSum + kd* dErr+120;
+uDesired = (float)kp * (float)error + ki * errSum + kd* dErr +(float)120;
 //Serial.print("\t");
 
 // remember some variables for next time
@@ -74,15 +98,18 @@ lastErr = error;
 lastTime = now;
 
 
-Serial.print(rpm);
-Serial.print("\t");
-Serial.print(error);
-Serial.print("\t");
-//Serial.print(rpm);
+
+
+
+Serial.println(rpm);
 //Serial.print("\t");
-//Serial.print(rpm);
+//Serial.print(error);
 //Serial.print("\t");
-Serial.println(uDesired);
+//Serial.print(spdtime);
+//Serial.print("\t");
+//Serial.print(millis());
+//Serial.print("\t");
+//Serial.println(uDesired);
   
   analogWrite(E1,uDesired); 
 
